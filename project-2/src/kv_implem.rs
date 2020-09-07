@@ -149,8 +149,11 @@ impl KvStore for KvStorePersist {
 
     fn get(&mut self, key: String) -> Result<Option<String>> {
         self.load_database_from_logs();
-        let entry = self.get_entry_from_pos(self.map_store.get(&key).unwrap());
-        return Ok(entry.value);
+        if self.map_store.contains_key(&key) {
+            let entry = self.get_entry_from_pos(self.map_store.get(&key).unwrap());
+            return Ok(entry.value);
+        }
+        return Err(KvsError::KeyNotFound);
     }
 
     fn remove(&mut self, key: String) -> Result<()> {
@@ -160,9 +163,12 @@ impl KvStore for KvStorePersist {
             value: None,
             command: KvPersistCommand::Delete,
         };
-        self.save_entry_in_logs(&entry);
-        self.rm_in_memory(&key);
-        Ok(())
+        if self.map_store.contains_key(&key) {
+            self.save_entry_in_logs(&entry);
+            self.rm_in_memory(&key);
+                return Ok(());
+        }
+        return Err(KvsError::KeyNotFound);
     }
 
     fn open() -> Result<KvStorePersist> {

@@ -52,11 +52,18 @@ fn main() {
     match opts.subcmd {
         SubCommand::Set(t) => store.set(t.key, t.value).expect("err get"),
         SubCommand::Get(t) => {
-            let value = store.get(t.key).expect("").unwrap();
-            println!("{}", value);
+            let value = store.get(t.key);
+            match value {
+                Ok(v) => println!("{}", v.unwrap()),
+                Err(_e) => println!("Key not found"),
+            }
         }
         SubCommand::Rm(t) => {
-            store.remove(t.key).expect("err rm");
+            let value = store.remove(t.key);
+            match value {
+                Ok(_v) => println!(""),
+                Err(_e) => println!("Key not found"),
+            }
         }
     }
 }
