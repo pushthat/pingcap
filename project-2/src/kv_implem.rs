@@ -1,9 +1,6 @@
 use failure::Fail;
-use rand::Rng;
 use serde::{Deserialize, Serialize};
-use std::any::Any;
 use std::collections::HashMap;
-use std::fs;
 use std::fs::File;
 use std::fs::OpenOptions;
 use std::io;
@@ -12,7 +9,6 @@ use std::io::BufReader;
 use std::io::SeekFrom;
 use std::io::Write;
 use std::path::Path;
-use std::path::PathBuf;
 
 pub trait KvStore {
     fn set(&mut self, key: String, value: String) -> Result<()>;

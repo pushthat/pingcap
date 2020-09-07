@@ -1,7 +1,6 @@
 use clap::Clap;
 use kvs::KvStore;
 use kvs::KvStorePersist;
-use std::process::exit;
 
 /// This doc string acts as a help message when the user runs '--help'
 /// as do all doc strings on fields
@@ -10,8 +9,8 @@ use std::process::exit;
 struct Opts {
     #[clap(subcommand)]
     subcmd: SubCommand,
-    #[clap(short, long, default_value = "db.db")]
-    config_file: String,
+    // #[clap(short, long, default_value = "db.db")]
+    // config_file: String,
 }
 
 #[derive(Clap)]
