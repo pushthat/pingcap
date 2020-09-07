@@ -78,12 +78,12 @@ impl KvStorePersist {
         return kv_store_persist;
     }
 
-    fn set_in_memory(&mut self, key: String, value: usize) {
-        self.map_store.insert(key, value);
+    fn set_in_memory(&mut self, key: String, value: &usize) {
+        self.map_store.insert(key, *value);
     }
 
-    fn rm_in_memory(&mut self, key: String) {
-        self.map_store.remove(&key);
+    fn rm_in_memory(&mut self, key: &String) {
+        self.map_store.remove(key);
     }
 
     fn load_database_from_logs(&mut self) {
@@ -95,18 +95,18 @@ impl KvStorePersist {
             let unwrapped_line = line.unwrap();
             let db_entry: KvEntry = serde_json::from_str(&unwrapped_line).unwrap();
             if db_entry.command == KvPersistCommand::Set {
-                self.set_in_memory(db_entry.key, current_position)
+                self.set_in_memory(db_entry.key, &current_position)
             } else {
-                self.rm_in_memory(db_entry.key)
+                self.rm_in_memory(&db_entry.key)
             }
             current_position += unwrapped_line.len() + 1;
         }
     }
 
-    fn get_entry_from_pos(&self, pos: usize) -> KvEntry {
+    fn get_entry_from_pos(&self, pos: &usize) -> KvEntry {
         let f1 = File::open(self.db_file.clone()).expect("unable to read file content");
         let mut reader = BufReader::new(f1);
-        reader.seek(SeekFrom::Start(pos as u64)).unwrap();
+        reader.seek(SeekFrom::Start(*pos as u64)).unwrap();
         let mut buf = String::new();
         reader
             .read_line(&mut buf)
@@ -122,7 +122,7 @@ impl KvStorePersist {
         }
     }
 
-    fn save_entry_in_logs(&self, entry: KvEntry) {
+    fn save_entry_in_logs(&self, entry: &KvEntry) {
         let serialized = serde_json::to_string(&entry).unwrap() + "\n";
         let mut file_open_options = OpenOptions::new()
             .write(true)
@@ -137,19 +137,19 @@ impl KvStorePersist {
 
 impl KvStore for KvStorePersist {
     fn set(&mut self, key: String, value: String) -> Result<()> {
-        let option_value: Option<String> = Some(value.clone());
+        let option_value: Option<String> = Some(value);
         let entry = KvEntry {
-            key: key.clone(),
+            key: key,
             value: option_value,
             command: KvPersistCommand::Set,
         };
-        self.save_entry_in_logs(entry);
+        self.save_entry_in_logs(&entry);
         Ok(())
     }
 
     fn get(&mut self, key: String) -> Result<Option<String>> {
         self.load_database_from_logs();
-        let entry = self.get_entry_from_pos(self.map_store.get(&key).cloned().unwrap());
+        let entry = self.get_entry_from_pos(self.map_store.get(&key).unwrap());
         return Ok(entry.value);
     }
 
@@ -160,13 +160,12 @@ impl KvStore for KvStorePersist {
             value: None,
             command: KvPersistCommand::Delete,
         };
-        self.save_entry_in_logs(entry);
-        self.rm_in_memory(key);
+        self.save_entry_in_logs(&entry);
+        self.rm_in_memory(&key);
         Ok(())
     }
 
     fn open() -> Result<KvStorePersist> {
-        // let mut rng = rand::thread_rng();
         return Ok(KvStorePersist::new(String::from("db.db")));
     }
 }
